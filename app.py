@@ -1,6 +1,6 @@
 import os
 from langfuse import get_client
-
+import boto3
 import json
 from pathlib import Path
 
@@ -40,23 +40,39 @@ st.write(
 # 2. ŁADOWANIE MODELU
 # ============================================================
 
-MODEL_PATH = (
-    Path(__file__).resolve().parent
-    / "models"
-    / "halfmarathon_model.pkl"
-)
+
 
 
 @st.cache_resource
 def load_model():
-    """Wczytuje wytrenowany model ML."""
 
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(
-            f"Nie znaleziono modelu: {MODEL_PATH}"
-        )
+    model_path = (
+        Path(__file__).resolve().parent
+        / "models"
+        / "halfmarathon_model.pkl"
+    )
 
-    return joblib.load(MODEL_PATH)
+    model_path.parent.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    s3 = boto3.client(
+        "s3",
+        endpoint_url=os.environ["R2_ENDPOINT"],
+        aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
+        region_name="auto",
+    )
+
+    s3.download_file(
+        os.environ["R2_BUCKET_NAME"],
+        "models/halfmarathon_model.pkl",
+        str(model_path),
+    )
+
+    return joblib.load(model_path)
+
 
 
 # ============================================================
