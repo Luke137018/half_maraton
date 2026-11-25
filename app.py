@@ -1,9 +1,5 @@
 import os
-from dotenv import load_dotenv
 from langfuse import get_client
-
-load_dotenv()
-
 import json
 from pathlib import Path
 
